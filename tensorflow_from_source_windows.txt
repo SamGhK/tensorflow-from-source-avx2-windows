@@ -1,0 +1,103 @@
+1. Download Python 3.6.8 64-bit release for Windows from https://www.python.org/downloads/release/python-368/
+
+2. Install the python 3.6.8 and choose add python to environment variable path during the installation
+
+3. Install Visual C++ Build Tools 2017(simpler to install community version of Visual studio 2019 or 2017)
+    Microsoft Visual C++ 2017 Redistributable
+	Microsoft Build Tools 2017
+    there is a very good guid for installing the rquired packages under step 3 in following links 
+	https://medium.com/@amsokol.com/update-2-how-to-build-and-install-tensorflow-gpu-cpu-for-windows-from-source-code-using-bazel-61c26553f7e8
+	
+4. install bazel 0.26.1
+   download the bazel exe file from https://github.com/bazelbuild/bazel/releases/tag/0.26.1
+   rename it to bazel.exe and put it in a folder on c drive
+   add the path to windows enviroment variable path (example--> C:\tools\bazel)
+
+5. install mysys2 64 bit from https://www.msys2.org/
+   download the 64 bit version and install it like the instruction on the page.(Example--> C:\tools\msys64)
+   update the packages by "pacman -Syu" then close the windows
+   open msys2 64bit again and run "pacman -Su"
+   install prequisits for bazel by "pacman -S zip unzip patch diffutils git"
+   
+6. set mysys2 enviroment variables
+BAZEL_SH:
+    Go to Start Menu > Settings.
+    Find the setting “Edit environment variables for your account”
+    Look at the list on the top (“User variables for <username>”), and click the “New…” button below it.
+    For “Variable name”, enter BAZEL_SH
+    Click “Browse File…”
+    Navigate to the MSYS2 directory, then to usr\bin below it.
+    For example, this might be C:\tools\msys64\usr\bin on your system. 
+    Select the bash.exe or bash file and click OK
+    The “Variable value” field now has the path to bash.exe. Click OK to close the window.
+    Done.
+
+BAZEL_VC
+	Go to Start Menu > Settings.
+	Find the setting “Edit environment variables for your account”
+	Look at the list on the top (“User variables for <username>”), and click the “New…” button below it.
+	For “Variable name”, enter BAZEL_VC
+	Click “Browse Directory…”
+	Navigate to the VC directory of Visual Studio.
+	For example, this might be C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC on your system, if you have installed the community version 2019.
+	Select the VC folder and click OK
+	The “Variable value” field now has the path to VC. Click OK to close the window.
+	Done.
+	
+7. Install tensorflow dependencies:(run cmd as administrator)
+	pip3 install six numpy wheel
+	pip3 install keras_applications==1.0.6 --no-deps
+	pip3 install keras_preprocessing==1.0.5 --no-deps
+   
+8. Download the TensorFlow source code
+	git clone https://github.com/tensorflow/tensorflow.git
+	go to directory where tensorflow source code is cloned
+	python ./configure.py
+	answer the question as default by pressing enter but two:
+	- Do you wish to build TensorFlow with CUDA support? [y/N]: N
+	- Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is /arch:AVX]: /arch:AVX2
+
+	wait till it is over
+	
+9. run bazel build with right flags
+	bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
+
+10. Post build 
+	after the Build is completed successfully, make a folder for whl-output outside of source directory(Example --> D:\Development\whl-output)
+    build the whl file and save the output in whl-output folder. inside the source folder run:
+		bazel-bin\tensorflow\tools\pip_package\build_pip_package path\to\whl-output)
+	install the package: (run cmd as administrator)
+		pip3 install path\to\whl-output\tensorflow-version-cp36-cp36m-win_amd64.whl
+		
+		
+*******************IGNOR FIRST, IF THE NORMAL STEPS DID NOT WORK THEN DO THIS STEPS*******************************************
+(7. configure build environment: (if it did not wor, roll back to step 7 and go over this step instead)
+   make a folder for tensorflow virtualenv and source code as follow on any drive:(for this step its better to use cmd and git should be installed)
+    - example--> D:\Development\tensorflow-r1.14  -> on D: in Development folder run "mkdir tensorflow-r1.14"  
+	- inside that folder make another folder called source -> in tensorflow-r1.14 run "mkdir source" 
+	- now clone the tensorflow git repository from https://github.com/tensorflow/tensorflow.git into source folder
+		-- inside the D:\Development\tensorflow-r1.14 execute "git clone https://github.com/tensorflow/tensorflow.git source"
+	- change to source folder and checkout r1.14 branch by executing "git checkout r1.14" (check the branch by "git branch") 
+	- close the cmd
+	- based on the installed visual studio build tools, run the "x64 Native Tools Command Prompt" as administrator
+		-- for example, if visual studio 2017 is installed, the "x64 Native Tools Command Prompt" can be found on start menu's list of apps under visual studio 2017 folder
+	- in x64 Native Tools Command Prompt install python virtualenv and tensorflow build dependencies
+		-- pip3 install -U virtualenv
+		-- virtualenv --system-site-packages D:\Development\tensorflow-r1.14 (afterward, your prompt should now look like "(tensorflow-r1.14) D:\Development\tensorflow-r1.14\")
+		-- pip3 install six numpy wheel (tensorflow dependency)
+		-- pip3 install keras_applications==1.0.6 --no-deps (tensorflow dependency)
+		-- pip3 install keras_preprocessing==1.0.5 --no-deps (tensorflow dependency)
+		-- make sure that the packages are installed by "pip3 list"
+		-- now change to source folder where tensorflow source lies
+		-- configure the tensorflow build by runing "python ./configure.py"
+		-- answer the question as default by pressing enter but two:
+			--- Do you wish to build TensorFlow with CUDA support? [y/N]: N
+			--- Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is /arch:AVX]: /arch:AVX2
+		
+        -- compile tensorflow source by bazel. Run:
+			--- bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
+		-- sit back and relax because this is going to take a while.
+        -- after the Build is completed successfully, make a folder for whl-output outside of source directory(Example --> D:\Development\tensorflow-r1.14\whl-output)
+        -- build the whl file and save the output in whl-output folder. inside the source folder run:
+			---- bazel-bin\tensorflow\tools\pip_package\build_pip_package ..\whl-output)
+***********************************************************************************************************		
